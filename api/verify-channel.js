@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 // 1. Telegram Channel Verification Logic
 async function verifyTelegramChannel(rawUrl) {
   let handle = rawUrl.trim();
-  handle = handle.replace(/^https?:\/\/(t\.me|telegram\.me)\//i, '');
+  handle = handle.replace(/^https?:\/\/(t\.me|telegram\.me)\/(s\/)?/i, '');
   handle = handle.replace(/^@/, '');
   handle = handle.split('/')[0].split('?')[0].trim();
 
@@ -44,58 +44,95 @@ async function verifyTelegramChannel(rawUrl) {
     throw new Error('Invalid Telegram channel URL or username.');
   }
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  let memberCount = 0;
+  let title = `@${handle}`;
+  let avatarUrl = null;
+  let detectedViaWeb = false;
 
-  if (botToken) {
-    // Call Telegram Bot API
-    const chatRes = await fetch(`https://api.telegram.org/bot${botToken}/getChat?chat_id=@${handle}`);
-    const chatData = await chatRes.json();
+  // Method A: Direct Telegram Public Web Scraper (Fastest, real-time, no Bot API rate-limits)
+  try {
+    const webRes = await fetch(`https://t.me/${handle}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
 
-    if (!chatData.ok) {
-      throw new Error(chatData.description || 'Telegram channel not found. Please ensure the channel is public.');
+    if (webRes.ok) {
+      const text = await webRes.text();
+      const extraMatch = text.match(/<div class="tgme_page_extra">([^<]+)<\/div>/i);
+      if (extraMatch) {
+        const rawCount = extraMatch[1]
+          .replace(/subscribers|members/gi, '')
+          .replace(/[\s\u00A0,]/g, '')
+          .trim();
+
+        if (rawCount.endsWith('M') || rawCount.endsWith('m')) {
+          memberCount = Math.round(parseFloat(rawCount) * 1000000);
+        } else if (rawCount.endsWith('K') || rawCount.endsWith('k')) {
+          memberCount = Math.round(parseFloat(rawCount) * 1000);
+        } else {
+          memberCount = parseInt(rawCount, 10) || 0;
+        }
+
+        if (memberCount > 0) {
+          detectedViaWeb = true;
+        }
+      }
+
+      const titleMatch = text.match(/<div class="tgme_page_title"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i) ||
+                         text.match(/<meta property="og:title" content="([^"]+)"/i);
+      if (titleMatch) {
+        title = titleMatch[1].replace(/Telegram:\s*Contact\s*/i, '').trim();
+      }
+
+      const imgMatch = text.match(/<meta property="og:image" content="([^"]+)"/i);
+      if (imgMatch && !imgMatch[1].includes('telegram-logo.svg')) {
+        avatarUrl = imgMatch[1];
+      }
     }
+  } catch (err) {
+    console.warn('Telegram web scraper error:', err.message);
+  }
 
-    const chat = chatData.result;
-    let memberCount = 0;
-
+  // Method B: Telegram Bot API (Fallback if web scrape was not sufficient)
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!detectedViaWeb && botToken) {
     try {
       const countRes = await fetch(`https://api.telegram.org/bot${botToken}/getChatMemberCount?chat_id=@${handle}`);
       const countData = await countRes.json();
-      if (countData.ok) {
+      if (countData.ok && countData.result) {
         memberCount = countData.result;
       }
+
+      const chatRes = await fetch(`https://api.telegram.org/bot${botToken}/getChat?chat_id=@${handle}`);
+      const chatData = await chatRes.json();
+      if (chatData.ok && chatData.result) {
+        title = chatData.result.title || title;
+      }
     } catch (e) {
-      console.warn('Could not fetch Telegram member count:', e);
+      console.warn('Telegram Bot API fallback error:', e.message);
     }
-
-    // Check minimum 100 members requirement
-    if (memberCount < MIN_SUBSCRIBERS_REQUIRED) {
-      throw new Error(`Channel must have at least ${MIN_SUBSCRIBERS_REQUIRED} subscribers/members to qualify. (Current: ${memberCount})`);
-    }
-
-    return {
-      success: true,
-      verified: true,
-      platform: 'Telegram',
-      title: chat.title || `@${handle}`,
-      username: `@${handle}`,
-      subscribers: memberCount,
-      subscribersFormatted: formatNumber(memberCount),
-      avatarUrl: null
-    };
   }
 
-  // Fallback demo/simulation mode
+  // Check if channel was found at all
+  if (memberCount === 0 && !detectedViaWeb) {
+    throw new Error('Telegram channel not found. Please ensure the channel link or @username is correct and the channel is public.');
+  }
+
+  // Check minimum 100 members requirement
+  if (memberCount < MIN_SUBSCRIBERS_REQUIRED) {
+    throw new Error(`Telegram channel must have at least ${MIN_SUBSCRIBERS_REQUIRED} subscribers/members to qualify. (Current: ${memberCount})`);
+  }
+
   return {
     success: true,
     verified: true,
     platform: 'Telegram',
-    title: `@${handle}`,
+    title: title || `@${handle}`,
     username: `@${handle}`,
-    subscribers: 2500,
-    subscribersFormatted: '2.5k',
-    isSimulation: true,
-    note: 'Verified with simulation mode. Add TELEGRAM_BOT_TOKEN in Vercel to enable live Bot API verification.'
+    subscribers: memberCount,
+    subscribersFormatted: formatNumber(memberCount),
+    avatarUrl
   };
 }
 
