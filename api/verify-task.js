@@ -83,7 +83,15 @@ async function verifyYouTubeTask(rawUrl, type, targetViews) {
   // Case B: Milestone Views Verification (Task 3)
   const required = parseInt(targetViews, 10) || 1000;
   if (views < required) {
-    throw new Error(`Video currently has ${views.toLocaleString()} views. Minimum ${required.toLocaleString()} views required to claim.`);
+    return {
+      success: false,
+      notReached: true,
+      viewCount: views,
+      requiredViews: required,
+      remainingViews: required - views,
+      title: title,
+      message: `Video currently has ${views.toLocaleString()} views. Need ${(required - views).toLocaleString()} more views to reach ${required.toLocaleString()}.`
+    };
   }
 
   return {
@@ -137,7 +145,14 @@ async function verifyTelegramTask(rawUrl, type, targetViews) {
   const required = parseInt(targetViews, 10) || 500;
 
   if (views > 0 && views < required) {
-    throw new Error(`Post currently has ${views.toLocaleString()} views. Minimum ${required.toLocaleString()} views required to claim.`);
+    return {
+      success: false,
+      notReached: true,
+      viewCount: views,
+      requiredViews: required,
+      remainingViews: required - views,
+      message: `Post currently has ${views.toLocaleString()} views. Need ${(required - views).toLocaleString()} more views to reach ${required.toLocaleString()}.`
+    };
   }
 
   return {

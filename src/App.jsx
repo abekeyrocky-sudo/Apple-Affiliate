@@ -193,6 +193,12 @@ export default function App() {
       });
 
       const data = await res.json();
+
+      if (data.notReached) {
+        showToast(`Tracked: ${data.viewCount?.toLocaleString() || 0} views. Need ${data.remainingViews?.toLocaleString() || 0} more views!`, 'info');
+        return data;
+      }
+
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Milestone verification failed.');
       }
@@ -206,6 +212,7 @@ export default function App() {
       }, true);
 
       showToast(`✓ Milestone Claimed! Verified ${data.viewCount?.toLocaleString() || targetViews} views. +$${amount.toFixed(2)} USDT added!`, 'success');
+      return data;
     } catch (err) {
       console.error(err);
       showToast(err.message || 'Milestone verification failed.', 'error');

@@ -30,6 +30,8 @@ export default function Dashboard({
     '3k': ''
   });
 
+  const [milestoneCheckResults, setMilestoneCheckResults] = useState({});
+
   const isTelegram = userData?.platform === 'Telegram';
   const targetPool = maxReward || (isTelegram ? 10.00 : 25.00);
 
@@ -75,9 +77,14 @@ export default function Dashboard({
     if (!url) return;
     setSubmittingTier(prev => ({ ...prev, [tier]: true }));
     try {
-      await onSubmitMilestone(tier, amount, url);
-      setMilestoneUrls(prev => ({ ...prev, [tier]: '' }));
-      setMilestoneInputsOpen(prev => ({ ...prev, [tier]: false }));
+      const result = await onSubmitMilestone(tier, amount, url);
+      if (result) {
+        setMilestoneCheckResults(prev => ({ ...prev, [tier]: result }));
+        if (result.success) {
+          setMilestoneUrls(prev => ({ ...prev, [tier]: '' }));
+          setMilestoneInputsOpen(prev => ({ ...prev, [tier]: false }));
+        }
+      }
     } catch (err) {
       // Toast displayed in App.jsx
     } finally {
@@ -399,6 +406,48 @@ export default function Dashboard({
                             )}
                           </button>
                         </div>
+
+                        {/* Live Tracking Result Feedback */}
+                        {milestoneCheckResults[tier.key] && (
+                          <div className={`p-2.5 rounded-xl border text-xs animate-pop ${
+                            milestoneCheckResults[tier.key].success 
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-900' 
+                              : 'bg-amber-50 border-amber-200 text-amber-900'
+                          }`}>
+                            <div className="flex items-center justify-between font-bold mb-1">
+                              <span className="truncate pr-2">{milestoneCheckResults[tier.key].title || 'Tracked Target'}</span>
+                              <span className="shrink-0 bg-white/80 px-2 py-0.5 rounded-md border border-slate-200/60 text-[11px]">
+                                {milestoneCheckResults[tier.key].viewCount?.toLocaleString() || 0} Views
+                              </span>
+                            </div>
+
+                            {milestoneCheckResults[tier.key].notReached && (
+                              <div className="space-y-1 mt-1.5">
+                                <div className="w-full bg-amber-200/80 rounded-full h-2 overflow-hidden">
+                                  <div 
+                                    className="bg-amber-500 h-2 rounded-full transition-all duration-500" 
+                                    style={{ 
+                                      width: `${Math.min(100, Math.round(((milestoneCheckResults[tier.key].viewCount || 0) / (milestoneCheckResults[tier.key].requiredViews || 1)) * 100))}%` 
+                                    }}
+                                  ></div>
+                                </div>
+                                <div className="flex justify-between text-[10px] text-amber-700 font-medium pt-0.5">
+                                  <span>Current: {(milestoneCheckResults[tier.key].viewCount || 0).toLocaleString()} views</span>
+                                  <span>Target: {(milestoneCheckResults[tier.key].requiredViews || 1).toLocaleString()} views</span>
+                                </div>
+                                <p className="text-[10px] text-amber-800 font-semibold pt-0.5">
+                                  {milestoneCheckResults[tier.key].message}
+                                </p>
+                              </div>
+                            )}
+
+                            {milestoneCheckResults[tier.key].success && (
+                              <p className="text-[10px] text-emerald-700 font-semibold">
+                                ✓ {milestoneCheckResults[tier.key].message}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
