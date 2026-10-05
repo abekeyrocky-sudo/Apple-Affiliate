@@ -1,0 +1,33 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Critical Security: Environment Variables (NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Build & Dependencies
+node_modules
+dist
+dist-ssr
+*.local
+_legacy/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

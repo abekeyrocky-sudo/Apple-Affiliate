@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Telegram WebApp Scrollbar & Touch Polish */
+body {
+  background-color: #F8FAFC;
+  color: #334155;
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Crisp Apple Farm Glow Effects */
+.glow-apple {
+  box-shadow: 0 10px 30px -5px rgba(225, 29, 72, 0.2), 0 4px 6px -2px rgba(225, 29, 72, 0.05);
+}
+.glow-leaf {
+  box-shadow: 0 10px 25px -4px rgba(16, 185, 129, 0.18);
+}
+.card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+}
+
+/* Modal Animation */
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.96) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop {
+  animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes progressGleam {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.gleam-bar {
+  background: linear-gradient(90deg, #E11D48 0%, #FB7185 50%, #E11D48 100%);
+  background-size: 200% 100%;
+  animation: progressGleam 2.5s infinite linear;
+}
