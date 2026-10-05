@@ -238,8 +238,8 @@ export default function Dashboard({
             <h4 className="font-display font-bold text-xs text-slate-900">
               {t.tasks_header}
             </h4>
-            <span className="text-[10px] font-bold text-[#059669] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-              ${targetPool.toFixed(2)} USDT Pool
+            <span className="text-[10px] font-bold text-[#059669] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+              ${targetPool.toFixed(2)} USDT
             </span>
           </div>
           <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
@@ -344,8 +344,8 @@ export default function Dashboard({
                   <h5 className="text-xs font-semibold text-slate-900">
                     {isTelegram ? 'Channel Post Views Milestone' : t.task_views_title}
                   </h5>
-                  <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded">
-                    {isTelegram ? '+$5.00 Pool' : '+$10.00 Pool'}
+                  <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded whitespace-nowrap">
+                    {isTelegram ? '+$5.00' : '+$10.00'}
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5">
