@@ -1,5 +1,6 @@
 import React from 'react';
 import { LANG_DATA } from '../constants/translations';
+import { openTelegramLink, SUPPORT_BOT_URL } from '../utils/telegram';
 
 export default function Header({ currentLang, onOpenLangModal, t }) {
   const langInfo = LANG_DATA[currentLang] || LANG_DATA.en;
@@ -35,9 +36,13 @@ export default function Header({ currentLang, onOpenLangModal, t }) {
           <span className="font-semibold text-slate-800">{langInfo.label}</span>
           <i className="fa-solid fa-chevron-down text-[9px] text-slate-400 ml-0.5"></i>
         </button>
-        <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
+        <button
+          onClick={() => openTelegramLink(SUPPORT_BOT_URL)}
+          title="Open Telegram Support Bot (@AppleFarm_Support_bot)"
+          className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 hover:border-[#2AABEE] active:scale-95 transition-all flex items-center justify-center text-slate-600 shadow-sm cursor-pointer"
+        >
           <i className="fa-brands fa-telegram text-[#2AABEE]"></i>
-        </div>
+        </button>
       </div>
     </header>
   );
